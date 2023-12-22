@@ -1,40 +1,36 @@
 package ast
 
-type NodeType int
+type TokenType string
 
 const (
-	ProgramType NodeType = iota
-	NumericLiteralType
-	IdentifierType
-	BinaryExpressionType
+	ProgramType          TokenType = "Program"
+	NumericLiteralType   TokenType = "NumericLiteral"
+	IdentifierType       TokenType = "Identifier"
+	BinaryExpressionType TokenType = "BinaryExpression"
 )
 
-type Statement struct {
-	kind NodeType
-}
+type Statement Expression
+
+type Expression interface{}
 
 type Program struct {
-	body []Statement
-	Statement
+	Body []Statement
+	Type TokenType
 }
 
 type NumericLiteral struct {
-	value float64
-	Statement
+	Value float64
+	Type  TokenType
 }
 
 type Identifier struct {
-	symbol string
-	Statement
+	Symbol string
+	Type   TokenType
 }
 
 type BinaryExpression struct {
-	operator string
-	left     Expression
-	right    Expression
-	Statement
-}
-
-type Expression struct {
-	Statement
+	Operator string
+	Left     Expression
+	Right    Expression
+	Type     TokenType
 }
