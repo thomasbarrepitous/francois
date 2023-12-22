@@ -1,13 +1,20 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"francois/lexer"
+	"log"
+	"os"
 )
 
-var src string = `a = 1 + 2 * 3`
-
 func main() {
-	l := lexer.Tokenize(src)
+	fmt.Print("Enter string : ")
+	reader := bufio.NewReader(os.Stdin)
+	line, err := reader.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
+	l := lexer.Tokenize(line)
 	fmt.Println(l)
 }
