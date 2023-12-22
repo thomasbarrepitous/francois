@@ -35,6 +35,7 @@ func Tokenize(sourceCode string) (tokens []Token) {
 	for _, token := range sourceCodeSplit {
 		tokens = append(tokens, Token{kind: identifyToken(token), value: token})
 	}
+	tokens = append(tokens, Token{kind: EOF, value: ""})
 	return tokens
 }
 
@@ -42,8 +43,6 @@ func identifyToken(word string) TokenKind {
 	switch word {
 	case " ":
 		return Whitespace
-	case "\n":
-		return EOF
 	case "+", "-", "*", "/", "%":
 		return Operator
 	case "(":
