@@ -15,6 +15,7 @@ const (
 	VariableDeclarationToken TokenType = "VariableDeclaration"
 	IdentifierToken          TokenType = "Identifier"
 	BinaryExpressionToken    TokenType = "BinaryExpr"
+	AssignmentToken          TokenType = "Assignment"
 )
 
 // Statement represents a statement in the AST.
@@ -64,19 +65,14 @@ func (binOp *BinaryExpression) Evaluate(env *runtime.Environment) runtime.Runtim
 		switch binOp.Operator {
 		case "+":
 			return runtime.MakeNumericValue(left.(runtime.NumericValue).Value + right.(runtime.NumericValue).Value)
-			// return runtime.NumericValue{Value: left.(runtime.NumericValue).Value + right.(runtime.NumericValue).Value}
 		case "-":
 			return runtime.MakeNumericValue(left.(runtime.NumericValue).Value - right.(runtime.NumericValue).Value)
-			// return runtime.NumericValue{Value: left.(runtime.NumericValue).Value - right.(runtime.NumericValue).Value}
 		case "*":
 			return runtime.MakeNumericValue(left.(runtime.NumericValue).Value * right.(runtime.NumericValue).Value)
-			// return runtime.NumericValue{Value: left.(runtime.NumericValue).Value * right.(runtime.NumericValue).Value}
 		case "/":
 			return runtime.MakeNumericValue(left.(runtime.NumericValue).Value / right.(runtime.NumericValue).Value)
-			// return runtime.NumericValue{Value: left.(runtime.NumericValue).Value / right.(runtime.NumericValue).Value}
 		case "%":
 			return runtime.MakeNumericValue(float64(int(left.(runtime.NumericValue).Value) % int(right.(runtime.NumericValue).Value)))
-			// return runtime.NumericValue{Value: float64(int(left.(runtime.NumericValue).Value) % int(right.(runtime.NumericValue).Value))}
 		default:
 			log.Fatal("Unknown operator")
 			return runtime.MakeNullValue()
@@ -110,13 +106,6 @@ func (v *VariableDeclaration) Kind() TokenType {
 }
 
 func (variableDeclaration *VariableDeclaration) Evaluate(env *runtime.Environment) runtime.RuntimeValue {
-	/*
-		const value = declaration.value
-		? evaluate(declaration.value, env)
-		: MK_NULL();
-
-		return env.declareVar(declaration.identifier, value, declaration.constant);
-	*/
 	if variableDeclaration.Value == nil {
 		return env.DeclareVariable(variableDeclaration.Symbol, runtime.MakeNullValue())
 	}
@@ -145,4 +134,21 @@ func (n *NullLiteral) Kind() TokenType {
 
 func (nullLiteral *NullLiteral) Evaluate(env *runtime.Environment) runtime.RuntimeValue {
 	return runtime.MakeNullValue()
+}
+
+type AssignmentExpression struct {
+	Assignee Expression
+	Value    Expression
+}
+
+func (a *AssignmentExpression) Kind() TokenType {
+	return AssignmentToken
+}
+
+func (assignment *AssignmentExpression) Evaluate(env *runtime.Environment) runtime.RuntimeValue {
+	if assignment.Assignee.Kind() != IdentifierToken {
+		log.Fatal("Assignee must be an identifier")
+	}
+	varname := assignment.Assignee.(*Identifier).Symbol
+	return env.SetVariable(varname, assignment.Value.Evaluate(env))
 }

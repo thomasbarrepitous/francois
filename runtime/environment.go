@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -27,7 +26,6 @@ func (env *Environment) DeclareVariable(name string, value RuntimeValue) Runtime
 
 func (env *Environment) SetVariable(name string, value RuntimeValue) RuntimeValue {
 	resEnv := env.resolve(name)
-	fmt.Printf("resEnv: %+v\n", resEnv)
 	resEnv.Values[name] = value
 	return value
 }

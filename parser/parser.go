@@ -12,6 +12,14 @@ type Parser struct {
 	tokens []lexer.Token
 }
 
+func (p *Parser) MustConsume(kind lexer.TokenKind, message string) lexer.Token {
+	if p.peek().Kind != kind {
+		log.Fatal(message)
+		os.Exit(1)
+	}
+	return p.consume()
+}
+
 func (p *Parser) isEOF() bool {
 	return p.tokens[0].Kind == lexer.EOF
 }
@@ -48,7 +56,7 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseExpression() ast.Expression {
-	return p.parseAdditiveExpression()
+	return p.parseAssignmentExpression()
 }
 
 func (p *Parser) parsePrimaryExpression() ast.Expression {
@@ -84,39 +92,29 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
 	}
 }
 
-func (p *Parser) MustConsume(kind lexer.TokenKind, message string) lexer.Token {
-	if p.peek().Kind != kind {
-		log.Fatal(message)
-		os.Exit(1)
-	}
-	return p.consume()
-}
-
 func (p *Parser) parseVariableDeclaration() ast.Statement {
 	kind := p.consume().Kind
-	value := p.parseExpression()
-
-	// ToDo : Handle var declaration without explicit value.
-	// Declaration without default value.
-	// if p.peek().Kind == lexer.EndOfInstruction {
-	// 	if kind == lexer.ConstantDeclaration {
-	// 		log.Fatal("Unexpected token. Expected assignment.")
-	// 		os.Exit(1)
-	// 	}
-	// 	return &ast.VariableDeclaration{
-	// 		IsConstant: false,
-	// 		Identifier: ast.Identifier{Symbol: identifier.Value},
-	// 		Value:      &ast.NullLiteral{},
-	// 	}
-	// }
-	p.MustConsume(
-		lexer.Assignment,
-		"Unexpected token. Expected assignment.",
-	)
 	identifier := p.MustConsume(
 		lexer.Identifier,
 		"Unexpected token. Expected identifier.",
 	)
+	// Declaration without default value.
+	if p.peek().Kind == lexer.EndOfInstruction {
+		if kind == lexer.ConstantDeclaration {
+			log.Fatal("Unexpected token. Expected assignment.")
+			os.Exit(1)
+		}
+		return &ast.VariableDeclaration{
+			IsConstant: false,
+			Identifier: ast.Identifier{Symbol: identifier.Value},
+			Value:      &ast.NullLiteral{},
+		}
+	}
+	p.MustConsume(
+		lexer.Assignment,
+		"Unexpected token. Expected assignment.",
+	)
+	value := p.parseExpression()
 	declaration := &ast.VariableDeclaration{
 		IsConstant: kind == lexer.ConstantDeclaration,
 		Identifier: ast.Identifier{Symbol: identifier.Value},
@@ -152,6 +150,20 @@ func (p *Parser) parseAdditiveExpression() ast.Expression {
 			Operator: operator.Value,
 			Left:     left,
 			Right:    right,
+		}
+	}
+	return left
+}
+
+func (p *Parser) parseAssignmentExpression() ast.Expression {
+	left := p.parseAdditiveExpression()
+	if p.peek().Kind == lexer.Assignment {
+		// Get rid of the assignment token.
+		p.consume()
+		value := p.parseAssignmentExpression()
+		return &ast.AssignmentExpression{
+			Assignee: left,
+			Value:    value,
 		}
 	}
 	return left
