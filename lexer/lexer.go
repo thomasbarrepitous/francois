@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -14,21 +13,27 @@ type Token struct {
 type TokenKind string
 
 const (
-	EOF         TokenKind = "EOF"
-	Whitespace  TokenKind = "Whitespace"
-	Number      TokenKind = "Number"
-	Identifier  TokenKind = "Identifier"
-	Operator    TokenKind = "Operator"
-	Assignment  TokenKind = "Assignment"
-	OpenParen   TokenKind = "OpenParen"
-	CloseParen  TokenKind = "CloseParen"
-	Declaration TokenKind = "Declaration"
-	Undefined   TokenKind = "Undefined"
+	EOF                 TokenKind = "EOF"
+	Whitespace          TokenKind = "Whitespace"
+	EndOfInstruction    TokenKind = "EndOfInstruction"
+	Number              TokenKind = "Number"
+	Operator            TokenKind = "Operator"
+	OpenParen           TokenKind = "OpenParen"
+	CloseParen          TokenKind = "CloseParen"
+	Undefined           TokenKind = "Undefined"
+	Identifier          TokenKind = "Identifier"
+	Assignment          TokenKind = "Assignment"
+	LocalDeclaration    TokenKind = "LocalDeclaration"
+	ConstantDeclaration TokenKind = "ConstantDeclaration"
+	Null                TokenKind = "Null"
 )
 
 var Keywords = map[string]TokenKind{
-	"met":  Declaration,
-	"dans": Assignment,
+	"met":   LocalDeclaration,
+	"const": ConstantDeclaration,
+	"dans":  Assignment,
+	"null":  Null,
+	"fin":   EndOfInstruction,
 }
 
 func shift(sourceCode *string) string {
@@ -81,7 +86,6 @@ func extractWord(sourceCode *string) string {
 		nextChar := string((*sourceCode)[0])
 		if isAlpha(nextChar) || isNumber(nextChar) {
 			word += shift(sourceCode)
-			fmt.Println("koadoaw", word)
 		} else {
 			break
 		}
