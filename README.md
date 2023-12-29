@@ -1,7 +1,8 @@
 # Francois Programming Language
 
-![Francois Logo](francois.jpg)
-
+<p align="center">
+  <img src="francois.jpg" alt="Francois Logo" width="100">
+</p>
 Francois is a basic high-level programming language written in Go, designed to be simple and fun. It currently supports floats and variable declaration, making it very basic but still approchable for begginers.
 
 ## Features
