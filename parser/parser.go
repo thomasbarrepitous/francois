@@ -34,6 +34,22 @@ func (p *Parser) consume() lexer.Token {
 	return token
 }
 
+func (p *Parser) parseProperty() ast.Property {
+	key := p.MustConsume(
+		lexer.Identifier,
+		"Unexpected token. Expected identifier.",
+	)
+	p.MustConsume(
+		lexer.PropertyLink,
+		"Unexpected token. Expected property link.",
+	)
+	value := p.parseExpression()
+	return ast.Property{
+		Key:   key.Value,
+		Value: value,
+	}
+}
+
 func (p *Parser) ProduceAST(sourceCode string) *ast.Program {
 	p.tokens = lexer.Tokenize(sourceCode)
 	program := &ast.Program{
@@ -148,17 +164,15 @@ func (p *Parser) parseAdditiveExpression() ast.Expression {
 		right := p.parseMultiplicativeExpression()
 		left = &ast.BinaryExpression{
 			Operator: operator.Value,
-			Left:     left,
-			Right:    right,
+			Left:     left, Right: right,
 		}
 	}
 	return left
 }
 
 func (p *Parser) parseAssignmentExpression() ast.Expression {
-	left := p.parseAdditiveExpression()
+	left := p.parseObjectExpression()
 	if p.peek().Kind == lexer.Assignment {
-		// Get rid of the assignment token.
 		p.consume()
 		value := p.parseAssignmentExpression()
 		return &ast.AssignmentExpression{
@@ -167,4 +181,25 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
 		}
 	}
 	return left
+}
+
+func (p *Parser) parseObjectExpression() ast.Expression {
+	if p.peek().Kind != lexer.OpenBrace {
+		return p.parseAdditiveExpression()
+	}
+	// Consume opening brace.
+	p.consume()
+	properties := []ast.Property{p.parseProperty()}
+	for {
+		if p.peek().Kind == lexer.CloseBrace || p.isEOF() {
+			break
+		}
+		// If not closing brace, consume comma.
+		p.MustConsume(lexer.Comma, "Unexpected token. Expected comma.")
+		properties = append(properties, p.parseProperty())
+	}
+	p.MustConsume(lexer.CloseBrace, "Unexpected token. Expected closing brace.")
+	return &ast.Object{
+		Properties: properties,
+	}
 }

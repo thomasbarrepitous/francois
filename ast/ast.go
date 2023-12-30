@@ -16,6 +16,8 @@ const (
 	IdentifierToken          TokenType = "Identifier"
 	BinaryExpressionToken    TokenType = "BinaryExpr"
 	AssignmentToken          TokenType = "Assignment"
+	PropertyToken            TokenType = "Property"
+	ObjectToken              TokenType = "Object"
 )
 
 // Statement represents a statement in the AST.
@@ -151,4 +153,35 @@ func (assignment *AssignmentExpression) Evaluate(env *runtime.Environment) runti
 	}
 	varname := assignment.Assignee.(*Identifier).Symbol
 	return env.SetVariable(varname, assignment.Value.Evaluate(env))
+}
+
+type Property struct {
+	Key   string
+	Value Expression
+}
+
+func (p *Property) Kind() TokenType {
+	return PropertyToken
+}
+
+func (property *Property) Evaluate(env *runtime.Environment) runtime.RuntimeValue {
+	return nil
+}
+
+type Object struct {
+	Properties []Property
+}
+
+func (o *Object) Kind() TokenType {
+	return ObjectToken
+}
+
+func (object *Object) Evaluate(env *runtime.Environment) runtime.RuntimeValue {
+	value := runtime.ObjectValue{
+		Properties: make(map[string]runtime.RuntimeValue),
+	}
+	for _, property := range object.Properties {
+		value.Properties[property.Key] = property.Value.Evaluate(env)
+	}
+	return value
 }

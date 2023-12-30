@@ -6,6 +6,7 @@ const (
 	NumericType ValueType = "Numeric"
 	NullType    ValueType = "Null"
 	BooleanType ValueType = "Boolean"
+	ObjectType  ValueType = "Object"
 )
 
 type RuntimeValue interface {
@@ -20,12 +21,20 @@ func (v NumericValue) Type() ValueType {
 	return NumericType
 }
 
+func MakeNumericValue(value float64) NumericValue {
+	return NumericValue{Value: value}
+}
+
 type NullValue struct {
 	Value string
 }
 
 func (v NullValue) Type() ValueType {
 	return NullType
+}
+
+func MakeNullValue() NullValue {
+	return NullValue{Value: "rien"}
 }
 
 type BooleanValue struct {
@@ -40,10 +49,10 @@ func MakeBooleanValue(value bool) BooleanValue {
 	return BooleanValue{Value: value}
 }
 
-func MakeNumericValue(value float64) NumericValue {
-	return NumericValue{Value: value}
+type ObjectValue struct {
+	Properties map[string]RuntimeValue
 }
 
-func MakeNullValue() NullValue {
-	return NullValue{Value: "rien"}
+func (v ObjectValue) Type() ValueType {
+	return ObjectType
 }
