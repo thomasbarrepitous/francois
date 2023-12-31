@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ExecType string = "REPL"
+	ExecType string = "FILE"
 )
 
 func main() {

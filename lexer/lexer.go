@@ -22,10 +22,13 @@ const (
 	CloseParen          TokenKind = "CloseParen"
 	OpenBrace           TokenKind = "OpenBrace"
 	CloseBrace          TokenKind = "CloseBrace"
+	OpenBracket         TokenKind = "OpenBracket"
+	CloseBracket        TokenKind = "CloseBracket"
 	Undefined           TokenKind = "Undefined"
 	Identifier          TokenKind = "Identifier"
 	Assignment          TokenKind = "Assignment"
-	PropertyLink        TokenKind = "PropertyLink"
+	Colon               TokenKind = "PropertyLink"
+	Dot                 TokenKind = "AttributeLink"
 	Comma               TokenKind = "Comma"
 	LocalDeclaration    TokenKind = "LocalDeclaration"
 	ConstantDeclaration TokenKind = "ConstantDeclaration"
@@ -57,8 +60,10 @@ func Tokenize(sourceCode string) (tokens []Token) {
 			shift(&sourceCode)
 		case ",":
 			tokens = append(tokens, Token{Kind: Comma, Value: shift(&sourceCode)})
+		case ".":
+			tokens = append(tokens, Token{Kind: Dot, Value: shift(&sourceCode)})
 		case ":":
-			tokens = append(tokens, Token{Kind: PropertyLink, Value: shift(&sourceCode)})
+			tokens = append(tokens, Token{Kind: Colon, Value: shift(&sourceCode)})
 		case "+", "-", "*", "/", "%":
 			tokens = append(tokens, Token{Kind: Operator, Value: shift(&sourceCode)})
 		case "(":
@@ -69,6 +74,10 @@ func Tokenize(sourceCode string) (tokens []Token) {
 			tokens = append(tokens, Token{Kind: OpenBrace, Value: shift(&sourceCode)})
 		case "}":
 			tokens = append(tokens, Token{Kind: CloseBrace, Value: shift(&sourceCode)})
+		case "[":
+			tokens = append(tokens, Token{Kind: OpenBracket, Value: shift(&sourceCode)})
+		case "]":
+			tokens = append(tokens, Token{Kind: CloseBracket, Value: shift(&sourceCode)})
 		default:
 			// Check for multi-character tokens
 			word := extractWord(&sourceCode)

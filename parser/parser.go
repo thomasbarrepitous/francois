@@ -40,7 +40,7 @@ func (p *Parser) parseProperty() ast.Property {
 		"Unexpected token. Expected identifier.",
 	)
 	p.MustConsume(
-		lexer.PropertyLink,
+		lexer.Colon,
 		"Unexpected token. Expected property link.",
 	)
 	value := p.parseExpression()
@@ -48,6 +48,30 @@ func (p *Parser) parseProperty() ast.Property {
 		Key:   key.Value,
 		Value: value,
 	}
+}
+
+func (p *Parser) parseArguments() []ast.Expression {
+	p.MustConsume(
+		lexer.OpenParen,
+		"Unexpected token. Expected opening parenthesis.",
+	)
+	arguments := []ast.Expression{}
+	if p.peek().Kind != lexer.CloseParen {
+		arguments = append(arguments, p.parseArgumentsSlice()...)
+	}
+	p.MustConsume(
+		lexer.CloseParen,
+		"Unexpected token. Expected closing parenthesis.",
+	)
+	return arguments
+}
+
+func (p *Parser) parseArgumentsSlice() []ast.Expression {
+	arguments := []ast.Expression{p.parseAssignmentExpression()}
+	for p.peek().Kind != lexer.CloseParen {
+		arguments = append(arguments, p.parseAssignmentExpression())
+	}
+	return arguments
 }
 
 func (p *Parser) ProduceAST(sourceCode string) *ast.Program {
@@ -144,10 +168,10 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
 }
 
 func (p *Parser) parseMultiplicativeExpression() ast.Expression {
-	left := p.parsePrimaryExpression()
+	left := p.parseCallMemberExpression()
 	for p.peek().Value == "/" || p.peek().Value == "*" || p.peek().Value == "%" {
 		operator := p.consume()
-		right := p.parsePrimaryExpression()
+		right := p.parseCallMemberExpression()
 		left = &ast.BinaryExpression{
 			Operator: operator.Value,
 			Left:     left,
@@ -202,4 +226,62 @@ func (p *Parser) parseObjectExpression() ast.Expression {
 	return &ast.Object{
 		Properties: properties,
 	}
+}
+
+func (p *Parser) parseCallMemberExpression() ast.Expression {
+	// Left hand side of the expression.
+	// Like so : foo.bar()
+	// We evaluate foo.bar first.
+	member := p.parseMemberExpression()
+	if p.peek().Kind == lexer.OpenParen {
+		return p.parseCallExpression(member)
+	}
+	return member
+}
+
+func (p *Parser) parseCallExpression(callee ast.Expression) ast.Expression {
+	// If we have a call expression, we need to parse the arguments.
+	// Typically we should have something like this:
+	// foo.bar(baz, qux) => callee = foo.bar, arguments = [baz, qux]
+	callExpression := &ast.CallExpression{
+		Callee:    callee,
+		Arguments: p.parseArguments(),
+	}
+	if p.peek().Kind == lexer.OpenParen {
+		return p.parseCallExpression(callExpression)
+	}
+
+	return callExpression
+}
+
+func (p *Parser) parseMemberExpression() ast.Expression {
+	// Handling left side
+	object := p.parsePrimaryExpression()
+	// Handling arguments or attributes / methods
+	for p.peek().Kind == lexer.Dot || p.peek().Kind == lexer.OpenBracket {
+		operator := p.consume()
+		var property ast.Expression
+		var isComputed bool
+		switch operator.Kind {
+		case lexer.Dot:
+			isComputed = false
+			property = p.parsePrimaryExpression()
+			if property.Kind() != ast.IdentifierToken {
+				log.Fatal("Cannot use Dot operator with non-identifier.")
+				os.Exit(1)
+			}
+		// If we have a bracket, we need to parse the expression inside.
+		default:
+			isComputed = true
+			property = p.parseExpression()
+			p.MustConsume(lexer.CloseBracket, "Unexpected token. Expected closing bracket.")
+		}
+
+		object = &ast.MemberExpression{
+			Object:     object,
+			Property:   property,
+			IsComputed: isComputed,
+		}
+	}
+	return object
 }

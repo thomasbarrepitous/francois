@@ -18,6 +18,8 @@ const (
 	AssignmentToken          TokenType = "Assignment"
 	PropertyToken            TokenType = "Property"
 	ObjectToken              TokenType = "Object"
+	CallExpressionToken      TokenType = "CallExpression"
+	MemberExpressionToken    TokenType = "MemberExpression"
 )
 
 // Statement represents a statement in the AST.
@@ -184,4 +186,33 @@ func (object *Object) Evaluate(env *runtime.Environment) runtime.RuntimeValue {
 		value.Properties[property.Key] = property.Value.Evaluate(env)
 	}
 	return value
+}
+
+type CallExpression struct {
+	Expression
+	Callee    Expression
+	Arguments []Expression
+}
+
+func (c *CallExpression) Kind() TokenType {
+	return CallExpressionToken
+}
+
+func (callExpression *CallExpression) Evaluate(env *runtime.Environment) runtime.RuntimeValue {
+	return nil
+}
+
+type MemberExpression struct {
+	Expression
+	Object     Expression
+	Property   Expression
+	IsComputed bool
+}
+
+func (m *MemberExpression) Kind() TokenType {
+	return MemberExpressionToken
+}
+
+func (memberExpression *MemberExpression) Evaluate(env *runtime.Environment) runtime.RuntimeValue {
+	return nil
 }

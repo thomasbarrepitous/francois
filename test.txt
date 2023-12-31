@@ -1,1 +1,10 @@
-met foo dans 3 fin
+dans foo met 50 / 2 fin
+dans obj met {
+    a: 1,
+    b: 2,
+    foo: foo,
+    complex: {
+        bar: true
+    }
+} fin
+dans rico met obj.foo(bar(a, b)) + 5 fin
