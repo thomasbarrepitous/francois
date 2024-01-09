@@ -17,3 +17,23 @@ To get started with Francois, you need to have Go installed on your machine. The
 
 ```bash
 go get -u github.com/thomasbarrepitous/francois
+```
+
+or simply build and execute after cloning this repo
+
+```bash
+git clone https://github.com/thomasbarrepitous/francois
+cd francois
+go build .
+```
+
+and depending on your OS :
+Windows :
+```bash
+francois.exe
+```
+
+Unix systems :
+```bash
+./francois
+```
